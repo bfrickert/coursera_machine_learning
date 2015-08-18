@@ -1,0 +1,119 @@
+##Predicting the quality of how a dumbbell curl is executed
+#####The machine learning algorithm below ingests Human Activity Recognition data provided by Groupware@LES at http://groupware.les.inf.puc-rio.br/har and predicts the quality each exercise's execution (represented as classifications A, B, C, D and E) based on accelerometer measurements provided in the data set.
+
+####Step 1: Data Wrangling
+#####The Groupware data set presents a few challenges: 1) it is fraught with "#DIV/0!" errors, 2) it has a preponderance of variables (160) and 3) many of those variables are sparsely populated. The code below attempts to address these challenges and returns a training data set containing only well-populated numeric variables.
+
+```{r}
+suppressWarnings(library(caret))
+suppressWarnings(library(ggplot2))
+
+set.seed(666)
+
+# Load training data and clean out "#DIV/0!" errors
+train.start <- read.table('data/pml-training.csv',sep=',', header=T, stringsAsFactors=F)
+x <- readLines('data/pml-training.csv')
+y <- gsub( "\"#DIV/0!\"", "NA", x )
+cat(y, file="data/clean.train.csv", sep="\n")
+
+# Load cleaned training data and testing data
+train.clean <- read.table('data/clean.train.csv',sep=',', header=T, stringsAsFactors=F)
+test.quiz <- read.table('data/pml-testing.csv',sep=',', header=T, stringsAsFactors=F)
+
+# identify the purely numeric covariates
+nums <- sapply(train.clean, is.numeric)
+train <- train.clean[,nums]
+test.quiz <- test.quiz[,nums]
+
+# remove index and timestamp columns
+train <- train[, c(-1:-4)]
+test.quiz <- test.quiz[, c(-1:-4)]
+
+# remove the near-zero variables
+nsv <- nearZeroVar(train,saveMetrics=TRUE)
+train <- train[,!nsv$zeroVar]
+test.quiz <- test.quiz[,!nsv$zeroVar]
+
+# remove columns that are more than 50% NA
+test.quiz <- test.quiz[ , apply(train, 2, function(x) (length(which(is.na(x)==F))/length(x)) > .5)]
+train <- train[ , apply(train, 2, function(x) (length(which(is.na(x)==F))/length(x)) > .5)]
+
+```
+
+#####The number of variables in the train and test.quiz data sets are now reduced from 160 to 52.
+
+####Step 2: Data Slicing and Predictor Plotting
+#####The training data set is divided into a train.set and test.set, the eventual machine learning algorithm will train on the former and be run once against the latter to establish in-sample and out-of-sample errors, respectively.
+
+```{r}
+# split data
+train<-cbind(train, train.clean$classe)
+names(train)[ncol(train)] <- 'classe'
+
+train.partition <- createDataPartition(y=as.character(train.clean$classe), p=.75, list=F)
+
+train.set <- train[train.partition,]
+test.set <- train[-train.partition,]
+train.classe <- train.set$classe
+test.classe <- test.set$classe
+train.set <- train.set[,-ncol(train.set)]
+test.set <- test.set[,-ncol(test.set)]
+```
+
+#####52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I run pairs plots of subsets of my dat`a (Figure 1) to glimpse potential relationships in the data.
+
+```{r}
+# re-align predictors with outcomes
+train.qplot <- cbind(train.set, train.classe) 
+
+# create pair plots
+pairs(train.qplot[,c(sample(1:ncol(train.qplot[,-ncol(train.qplot)]), 5), ncol(train.qplot))], 
+      main = "Randomized View of training data pairs", pch = 21, 
+      bg = c("orange", "green3", "red", "purple", "blue")[unclass(train.qplot$train.classe)], 
+      lower.panel=NULL, font.labels=2, cex.labels=1.0)
+
+```
+
+#####One thing I notice is that there doesn't seem to be a lot of variation explained by these predictors, nor are there any obvious linear relationships. Also, some of the predictors have very significant outliers. Figure 2 further confirms this with an example of some of the relationships I found when examining specific predictors.
+
+```{r}
+require(gridExtra)
+plot1 <- qplot(yaw_arm, train.classe, data=train.qplot, colour=train.classe)
+plot2 <- qplot(gyros_dumbbell_x, train.classe, data=train.qplot, colour=train.classe)
+plot3 <- qplot(roll_dumbbell, magnet_forearm_y, data=train.qplot, colour=train.classe)
+grid.arrange(plot1, plot2, plot3, ncol=2, nrow=2)
+```
+
+####Step 3: Pre-Processing
+#####To address any NA's that may exist in my data and further reduce the number of predictors, I choose to pre-process the data sets with the knnImpute and Principal Component Analysis. Figure 3 demonstrates the resulting train.pca data set.
+
+```{r}
+preProc <- preProcess(train.set, method=c("knnImpute"))
+train.knn <- predict(preProc, train.set)
+test.knn <- predict(preProc, test.set)
+test.quiz.knn <- predict(preProc, test.quiz)
+prePCA <- preProcess(train.knn, method="pca")
+train.pca <- predict(prePCA, train.knn)
+test.pca <- predict(prePCA, test.knn)
+test.quiz.pca <- predict(prePCA, test.quiz.knn)
+
+# Feature Plot of train.pca
+featurePlot(train.pca, train.classe)
+```
+
+#####Though the number of predictors is cut in half, the data set now loses interpretability. And it's clear that there do remain, in two extreme case, some outliers in the data.
+
+####Step 4: Fit Models and Predict
+#####There did not appear to be any linear relationships among my initial predictors, so I employed a decision tree algorithm (32% accuracy), then a linear discriminant analysis (52%), and ultimately bagging.
+
+```{r}
+tc <- trainControl(method="cv", number=5)
+modFit <- train(train.pca, train.classe, method="treebag", trControl=tc)
+pred <- predict(modFit, test.pca)
+acc <- mean(pred == test.classe)
+table(pred,test.classe)
+```
+
+#####Tree-bagging achieves an in-sample error of roughly 5%. This should prove a fairly good estimate of the out-of sample error given that I'd employed 5-fold cross-validation.
+
+#####The out-of-sample accuracy is `r (1 - round(acc, 2)) * 100 `%.

@@ -61,12 +61,10 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h4>Step 1: Data Wrangling</h4>
 <div id="the-groupware-data-set-presents-a-few-challenges-1-it-is-fraught-with-div0-errors-2-it-has-a-preponderance-of-variables-160-and-3-many-of-those-variables-are-sparsely-populated.-the-code-below-attempts-to-address-these-challenges-and-returns-a-training-data-set-containing-only-well-populated-numeric-variables." class="section level5">
 <h5>The Groupware data set presents a few challenges: 1) it is fraught with “#DIV/0!” errors, 2) it has a preponderance of variables (160) and 3) many of those variables are sparsely populated. The code below attempts to address these challenges and returns a training data set containing only well-populated numeric variables.</h5>
-<pre class="r"><code>library(caret)</code></pre>
-<pre><code>## Warning: package 'caret' was built under R version 3.1.3</code></pre>
+<pre class="r"><code>suppressWarnings(library(caret))</code></pre>
 <pre><code>## Loading required package: lattice
 ## Loading required package: ggplot2</code></pre>
-<pre><code>## Warning: package 'ggplot2' was built under R version 3.1.3</code></pre>
-<pre class="r"><code>library(ggplot2)
+<pre class="r"><code>suppressWarnings(library(ggplot2))
 
 set.seed(666)
 
@@ -167,49 +165,29 @@ featurePlot(train.pca, train.classe)</code></pre>
 </div>
 <div id="step-4-fit-models-and-predict" class="section level4">
 <h4>Step 4: Fit Models and Predict</h4>
-<div id="being-as-my-outcome-is-a-factor-of-five-outcomes-and-there-seem-to-be-no-linear-relationships-initially-among-my-predictors-i-decide-to-start-my-model-fitting-with-decision-trees." class="section level5">
-<h5>Being as my outcome is a factor of five outcomes and there seem to be no linear relationships initially among my predictors, I decide to start my model fitting with decision trees.</h5>
-<pre class="r"><code>tc &lt;- trainControl(method=&quot;cv&quot;, number=10)
-modFit &lt;- train(train.pca, train.classe, method=&quot;rpart&quot;, trControl=tc)</code></pre>
-<pre><code>## Loading required package: rpart</code></pre>
+<div id="there-did-not-appear-to-be-any-linear-relationships-among-my-initial-predictors-so-i-employed-a-decision-tree-algorithm-32-accuracy-then-a-linear-discriminant-analysis-52-and-ultimately-bagging." class="section level5">
+<h5>There did not appear to be any linear relationships among my initial predictors, so I employed a decision tree algorithm (32% accuracy), then a linear discriminant analysis (52%), and ultimately bagging.</h5>
+<pre class="r"><code>tc &lt;- trainControl(method=&quot;cv&quot;, number=5)
+modFit &lt;- train(train.pca, train.classe, method=&quot;treebag&quot;, trControl=tc)</code></pre>
+<pre><code>## Loading required package: ipred</code></pre>
+<pre><code>## Warning: package 'ipred' was built under R version 3.1.3</code></pre>
+<pre><code>## Loading required package: plyr</code></pre>
 <pre class="r"><code>pred &lt;- predict(modFit, test.pca)
-acc &lt;- round(mean(pred == test.classe), 2)</code></pre>
+acc &lt;- mean(pred == test.classe)
+table(pred,test.classe)</code></pre>
+<pre><code>##     test.classe
+## pred    A    B    C    D    E
+##    A 1366   31    7    6    0
+##    B   10  888   13    2    9
+##    C    7   18  821   40   12
+##    D   10    5   10  754   12
+##    E    2    7    4    2  868</code></pre>
 </div>
-<div id="it-achieves-an-out-of-sample-accuracy-of-0.38." class="section level5">
-<h5>It achieves an out-of-sample accuracy of 0.38.</h5>
+<div id="tree-bagging-achieves-an-in-sample-error-of-roughly-5.-this-should-prove-a-fairly-good-estimate-of-the-out-of-sample-error-given-that-id-employed-5-fold-cross-validation." class="section level5">
+<h5>Tree-bagging achieves an in-sample error of roughly 5%. This should prove a fairly good estimate of the out-of sample error given that I’d employed 5-fold cross-validation.</h5>
 </div>
-<div id="i-then-choose-to-employ-linear-design-analysis." class="section level5">
-<h5>I then choose to employ Linear Design Analysis.</h5>
-<pre class="r"><code>modFit &lt;- train(train.pca, train.classe, method=&quot;lda&quot;, trControl=tc)</code></pre>
-<pre><code>## Loading required package: MASS</code></pre>
-<pre class="r"><code>print(modFit)</code></pre>
-<pre><code>## Linear Discriminant Analysis 
-## 
-## 14718 samples
-##    25 predictor
-##     5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## No pre-processing
-## Resampling: Cross-Validated (10 fold) 
-## Summary of sample sizes: 13246, 13246, 13245, 13247, 13245, 13247, ... 
-## Resampling results
-## 
-##   Accuracy   Kappa     Accuracy SD  Kappa SD  
-##   0.5290779  0.403826  0.01048687   0.01363426
-## 
-## </code></pre>
-<pre class="r"><code>pred &lt;- predict(modFit, test.pca)
-acc &lt;- round(mean(pred == test.classe), 2)</code></pre>
-</div>
-<div id="the-accuracy-out-of-sample-accuracy-is-0.52." class="section level5">
-<h5>The accuracy out-of-sample accuracy is 0.52.</h5>
-<pre class="r"><code># modFit &lt;- train(train.pca, train.classe, method=&quot;treebag&quot;, trControl=tc)
-# print(modFit)
-# pred &lt;- predict(modFit, test.pca)
-# mean(pred == test.classe)</code></pre>
-</div>
-<div id="tree-bagging-achieves-an-in-sample-accuracy-with-10-fold-cross-validation-of-over-95.-the-out-of-sample-accuracy-is-even-better." class="section level5">
-<h5>Tree-bagging achieves an in-sample accuracy, with 10-fold cross-validation, of over 95%. The out-of-sample accuracy is even better.</h5>
+<div id="the-out-of-sample-accuracy-is-4." class="section level5">
+<h5>The out-of-sample accuracy is 4%.</h5>
 </div>
 </div>
 </div>

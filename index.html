@@ -157,7 +157,8 @@ modFit &lt;- train(train.pca, train.classe, method=&quot;treebag&quot;, trContro
 <pre><code>## Loading required package: plyr</code></pre>
 <pre class="r"><code>pred &lt;- predict(modFit, test.pca)
 acc &lt;- mean(pred == test.classe)</code></pre>
-<p>Tree-bagging achieves an in-sample error of roughly <strong>5%</strong>. This should prove a fairly good estimate of the out-of sample error, given that I employed <strong>5-fold cross-validation</strong> which estimates the error of the model by dividing the <strong>train.pca</strong> data set into five training and testing subsets and then applying the model against those subsets, returnin 5 different error estimates. An average of those estimates is then used as the model’s estimated error.</p>
+<p>Tree-bagging achieves an in-sample error of roughly <strong>5%</strong>. I would expect this to be a fairly good estimate of the out-of sample error, given that I employed <strong>5-fold cross-validation</strong> which estimates the error of the model by dividing the <strong>train.pca</strong> data set into five training and testing subsets and then applies the model against those subsets, returning 5 different error estimates. An average of those estimates is then used as the model’s estimated error.</p>
+<p>And it turns out to be a pretty accurate estimate. When run against my <strong>test.pca</strong> data set, my model’s resulting out-of-sample error is <strong>4%</strong>.</p>
 <pre class="r"><code>table(pred,test.classe)</code></pre>
 <pre><code>##     test.classe
 ## pred    A    B    C    D    E
@@ -166,7 +167,6 @@ acc &lt;- mean(pred == test.classe)</code></pre>
 ##    C    7   18  821   40   12
 ##    D   10    5   10  754   12
 ##    E    2    7    4    2  868</code></pre>
-<p>And it turns out to be a pretty accurate estimate. When run against my test data set, my model’s resulting out-of-sample error is 4%.</p>
 </div>
 </div>
 

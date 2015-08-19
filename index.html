@@ -52,8 +52,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 
 
-<div id="predicting-the-quality-of-how-a-dumbbell-curl-is-executed" class="section level2">
-<h2>Predicting the quality of how a dumbbell curl is executed</h2>
+<div id="predicting-the-quality-of-how-a-barbell-lift-is-executed" class="section level2">
+<h2>Predicting the quality of how a barbell lift is executed</h2>
 <div id="the-machine-learning-algorithm-below-ingests-human-activity-recognition-data-provided-by-groupwareles-at-httpgroupware.les.inf.puc-rio.brhar-and-predicts-the-quality-each-exercises-execution-represented-as-classifications-a-b-c-d-and-e-based-on-accelerometer-measurements-provided-in-the-data-set." class="section level5">
 <h5>The machine learning algorithm below ingests Human Activity Recognition data provided by <a href="mailto:Groupware@LES">Groupware@LES</a> at <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> and predicts the quality each exercise’s execution (represented as classifications A, B, C, D and E) based on accelerometer measurements provided in the data set.</h5>
 </div>
@@ -117,8 +117,8 @@ test.classe &lt;- test.set$classe
 train.set &lt;- train.set[,-ncol(train.set)]
 test.set &lt;- test.set[,-ncol(test.set)]</code></pre>
 </div>
-<div id="is-still-an-intimidating-number-of-variables.-so-taking-inspiration-from-machine-learning-algorithms-that-sample-and-resample-data-sets-i-run-pairs-plots-of-subsets-of-my-data-figure-1-to-glimpse-potential-relationships-in-the-data." class="section level5">
-<h5>52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I run pairs plots of subsets of my dat`a (Figure 1) to glimpse potential relationships in the data.</h5>
+<div id="is-still-an-intimidating-number-of-variables.-so-taking-inspiration-from-machine-learning-algorithms-that-sample-and-resample-data-sets-i-ran-pairs-plots-of-subsets-of-my-data-figure-1-to-glimpse-potential-relationships-in-the-data." class="section level5">
+<h5>52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I ran pairs plots of subsets of my data (Figure 1) to glimpse potential relationships in the data.</h5>
 <pre class="r"><code># re-align predictors with outcomes
 train.qplot &lt;- cbind(train.set, train.classe) 
 
@@ -165,8 +165,8 @@ featurePlot(train.pca, train.classe)</code></pre>
 </div>
 <div id="step-4-fit-models-and-predict" class="section level4">
 <h4>Step 4: Fit Models and Predict</h4>
-<div id="there-did-not-appear-to-be-any-linear-relationships-among-my-initial-predictors-so-i-employed-a-decision-tree-algorithm-32-accuracy-then-a-linear-discriminant-analysis-52-and-ultimately-bagging." class="section level5">
-<h5>There did not appear to be any linear relationships among my initial predictors, so I employed a decision tree algorithm (32% accuracy), then a linear discriminant analysis (52%), and ultimately bagging.</h5>
+<div id="there-did-not-appear-to-be-any-linear-relationships-among-my-initial-predictors-so-i-employed-a-decision-tree-algorithm-32-accuracy-then-a-linear-discriminant-analysis-model-52-and-ultimately-bagging." class="section level5">
+<h5>There did not appear to be any linear relationships among my initial predictors, so I employed a decision tree algorithm (32% accuracy), then a linear discriminant analysis model (52%), and ultimately bagging.</h5>
 <pre class="r"><code>tc &lt;- trainControl(method=&quot;cv&quot;, number=5)
 modFit &lt;- train(train.pca, train.classe, method=&quot;treebag&quot;, trControl=tc)</code></pre>
 <pre><code>## Loading required package: ipred</code></pre>

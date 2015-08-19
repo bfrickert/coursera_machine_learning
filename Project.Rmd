@@ -1,4 +1,4 @@
-##Predicting the quality of how a dumbbell curl is executed
+##Predicting the quality of how a barbell lift is executed
 #####The machine learning algorithm below ingests Human Activity Recognition data provided by Groupware@LES at http://groupware.les.inf.puc-rio.br/har and predicts the quality each exercise's execution (represented as classifications A, B, C, D and E) based on accelerometer measurements provided in the data set.
 
 ####Step 1: Data Wrangling
@@ -60,7 +60,7 @@ train.set <- train.set[,-ncol(train.set)]
 test.set <- test.set[,-ncol(test.set)]
 ```
 
-#####52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I run pairs plots of subsets of my dat`a (Figure 1) to glimpse potential relationships in the data.
+#####52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I ran pairs plots of subsets of my data (Figure 1) to glimpse potential relationships in the data.
 
 ```{r}
 # re-align predictors with outcomes
@@ -104,7 +104,7 @@ featurePlot(train.pca, train.classe)
 #####Though the number of predictors is cut in half, the data set now loses interpretability. And it's clear that there do remain, in two extreme case, some outliers in the data.
 
 ####Step 4: Fit Models and Predict
-#####There did not appear to be any linear relationships among my initial predictors, so I employed a decision tree algorithm (32% accuracy), then a linear discriminant analysis (52%), and ultimately bagging.
+#####There did not appear to be any linear relationships among my initial predictors, so I employed a decision tree algorithm (32% accuracy), then a linear discriminant analysis model (52%), and ultimately bagging.
 
 ```{r}
 tc <- trainControl(method="cv", number=5)

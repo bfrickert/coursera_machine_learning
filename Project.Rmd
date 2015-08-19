@@ -1,8 +1,8 @@
 ##Predicting the quality of how a barbell lift is executed
-#####The machine learning algorithm below ingests Human Activity Recognition data provided by Groupware@LES at http://groupware.les.inf.puc-rio.br/har and predicts the quality each exercise's execution (represented as classifications A, B, C, D and E) based on accelerometer measurements provided in the data set.
+The machine learning algorithm below ingests Human Activity Recognition data provided by Groupware@LES at http://groupware.les.inf.puc-rio.br/har and predicts the quality of each exercise's execution (represented as classifications **A**, **B**, **C**, **D** and **E**) based on accelerometer measurements provided in the data set.
 
 ####Step 1: Data Wrangling
-#####The Groupware data set presents a few challenges: 1) it is fraught with "#DIV/0!" errors, 2) it has a preponderance of variables (160) and 3) many of those variables are sparsely populated. The code below attempts to address these challenges and returns a training data set containing only well-populated numeric variables.
+The Groupware data set presents a few challenges: **1)** it is fraught with "#DIV/0!" errors, **2)** it has a preponderance of variables (160) and **3)** many of those variables are sparsely populated. The code below attempts to address these challenges and returns a training data set containing only well-populated numeric variables.
 
 ```{r}
 suppressWarnings(library(caret))
@@ -40,10 +40,10 @@ train <- train[ , apply(train, 2, function(x) (length(which(is.na(x)==F))/length
 
 ```
 
-#####The number of variables in the train and test.quiz data sets are now reduced from 160 to 52.
+The number of variables in the train and test.quiz data sets are now **reduced from 160 to 52**.
 
 ####Step 2: Data Slicing and Predictor Plotting
-#####The training data set is divided into a train.set and test.set, the eventual machine learning algorithm will train on the former and be run once against the latter to establish in-sample and out-of-sample errors, respectively.
+The training data set is divided into a **train.set** and **test.set**, the eventual machine learning algorithm will train on the former and be run once against the latter to establish in-sample and out-of-sample errors, respectively.
 
 ```{r}
 # split data
@@ -60,7 +60,7 @@ train.set <- train.set[,-ncol(train.set)]
 test.set <- test.set[,-ncol(test.set)]
 ```
 
-#####52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I ran pairs plots of subsets of my data (Figure 1) to glimpse potential relationships in the data.
+52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I ran pairs plots against randomly chosen subsets of my training data multiple times to glimpse potential relationships. **Figure 1** below is a sample of one of those pairs plots.
 
 ```{r}
 # re-align predictors with outcomes
@@ -74,7 +74,7 @@ pairs(train.qplot[,c(sample(1:ncol(train.qplot[,-ncol(train.qplot)]), 5), ncol(t
 
 ```
 
-#####One thing I notice is that there doesn't seem to be a lot of variation explained by these predictors, nor are there any obvious linear relationships. Also, some of the predictors have very significant outliers. Figure 2 further confirms this with an example of some of the relationships I found when examining specific predictors.
+One thing I notice is that not much variation in the response is explained by these predictors, nor are there any obvious linear relationships, and some of the predictors have very significant outliers. **Figure 2** further confirms this with an example of some of the relationships I found when examining specific predictors.
 
 ```{r}
 require(gridExtra)
@@ -85,7 +85,7 @@ grid.arrange(plot1, plot2, plot3, ncol=2, nrow=2)
 ```
 
 ####Step 3: Pre-Processing
-#####To address any NA's that may exist in my data and further reduce the number of predictors, I choose to pre-process the data sets with the knnImpute and Principal Component Analysis. Figure 3 demonstrates the resulting train.pca data set.
+To address any NA's that may exist in my data and further reduce the number of predictors, I chose to pre-process all my data sets with knnImpute and Principal Component Analysis. **Figure 3** is a feature plot of the resulting train.pca data set.
 
 ```{r}
 preProc <- preProcess(train.set, method=c("knnImpute"))
@@ -101,19 +101,23 @@ test.quiz.pca <- predict(prePCA, test.quiz.knn)
 featurePlot(train.pca, train.classe)
 ```
 
-#####Though the number of predictors is cut in half, the data set now loses interpretability. And it's clear that there do remain, in two extreme case, some outliers in the data.
+Though the number of predictors is cut in half, the data set now loses interpretability. And it's clear that there do remain, in two extreme case, some outliers in the data.
 
 ####Step 4: Fit Models and Predict
-#####There did not appear to be any linear relationships among my initial predictors, so I employed a decision tree algorithm (32% accuracy), then a linear discriminant analysis model (52%), and ultimately bagging.
+Being as there did not appear to be any linear relationships among my initial predictors, I started by fitting a decision tree algorithm (**achieving only 32% accuracy**), then a linear discriminant analysis model (**52%**), and ultimately **bagging**.
 
 ```{r}
 tc <- trainControl(method="cv", number=5)
 modFit <- train(train.pca, train.classe, method="treebag", trControl=tc)
 pred <- predict(modFit, test.pca)
 acc <- mean(pred == test.classe)
+```
+
+Tree-bagging achieves an in-sample error of roughly **5%**. I would expect this to be a fairly good estimate of the out-of sample error, given that I employed **5-fold cross-validation** which estimates the error of the model by dividing the **train.pca** data set into five training and testing subsets and then applies the model against those subsets, returning 5 different error estimates. An average of those estimates is then used as the model's estimated error.
+
+And it turns out to be a pretty accurate estimate. When run against my **test.pca** data set, my model's resulting out-of-sample error is **`r (1 - round(acc, 2)) * 100 `%**.
+
+```{r}
 table(pred,test.classe)
 ```
 
-#####Tree-bagging achieves an in-sample error of roughly 5%. This should prove a fairly good estimate of the out-of sample error given that I'd employed 5-fold cross-validation.
-
-#####The out-of-sample accuracy is `r (1 - round(acc, 2)) * 100 `%.

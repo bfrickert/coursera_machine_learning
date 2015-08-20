@@ -60,7 +60,7 @@ train.set <- train.set[,-ncol(train.set)]
 test.set <- test.set[,-ncol(test.set)]
 ```
 
-52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I ran pairs plots against randomly chosen subsets of my training data multiple times to glimpse potential relationships. **Figure 1** below is a sample of one of those pairs plots.
+52 is still an intimidating number of variables. So taking inspiration from machine learning algorithms that sample and resample data sets, I ran multiple pairs plots against randomly chosen subsets of my training data to glimpse potential relationships. **Figure 1** below is a sample of one of those pairs plots.
 
 ```{r}
 # re-align predictors with outcomes
@@ -101,10 +101,10 @@ test.quiz.pca <- predict(prePCA, test.quiz.knn)
 featurePlot(train.pca, train.classe)
 ```
 
-Though the number of predictors is cut in half, the data set now loses interpretability. And it's clear that there do remain, in two extreme case, some outliers in the data.
+Though the number of predictors is cut in half, the data set now loses interpretability. And it's clear that there do remain, in two extreme cases, some outliers in the data.
 
 ####Step 4: Fit Models and Predict
-Being as there did not appear to be any linear relationships among my initial predictors, I started by fitting a decision tree algorithm (**achieving only 32% accuracy**), then a linear discriminant analysis model (**52%**), and ultimately **bagging**.
+Being as there did not appear to be any clear linear relationships among my initial predictors, I model fitting with a decision tree algorithm (**achieving only 32% accuracy**), then a linear discriminant analysis model (**52%**). I had the most success though with **bagging**.
 
 ```{r}
 tc <- trainControl(method="cv", number=5)
@@ -113,9 +113,9 @@ pred <- predict(modFit, test.pca)
 acc <- mean(pred == test.classe)
 ```
 
-Tree-bagging achieves an in-sample error of roughly **5%**. I would expect this to be a fairly good estimate of the out-of sample error, given that I employed **5-fold cross-validation** which estimates the error of the model by dividing the **train.pca** data set into five training and testing subsets and then applies the model against those subsets, returning 5 different error estimates. An average of those estimates is then used as the model's estimated error.
+Tree-bagging achieves an in-sample error of roughly **5%**. I would expect this to be a fairly good estimate of the out-of sample error, given that I employed **5-fold cross-validation** which estimates the error of the model by dividing the **train.pca** data set into  five different sets of training and testing data sets and then applies the model against them, returning 5 different error estimates. An average of those estimates is then used as the model's estimated error.
 
-And it turns out to be a pretty accurate estimate. When run against my **test.pca** data set, my model's resulting out-of-sample error is **`r (1 - round(acc, 2)) * 100 `%**.
+And it turns out indeed to be a pretty accurate estimate. When run against my **test.pca** data set, my model's resulting out-of-sample error is **`r (1 - round(acc, 2)) * 100 `%**.
 
 ```{r}
 table(pred,test.classe)

@@ -1,4 +1,4 @@
-setwd('c:/coursera/machine\ learning/project')
+setwd('/home/ubuntu/coursera_machine_learning')
 
 ##########
 # Data Wrangling and Covariate Creation
@@ -11,6 +11,7 @@ set.seed(666)
 
 # Load training data and clean out "#DIV/0!" errors
 train.start <- read.table('data/pml-training.csv',sep=',', header=T, stringsAsFactors=F)
+
 x <- readLines('data/pml-training.csv')
 y <- gsub( "\"#DIV/0!\"", "NA", x )
 cat(y, file="data/clean.train.csv", sep="\n")
@@ -99,10 +100,18 @@ mean(pred == test.classe)
 # .52
 
 modFit <- train(train.pca, train.classe, method="treebag", trControl=tc)
-print(modFit)
 pred <- predict(modFit, test.pca)
 mean(pred == test.classe)
-# .96, motherfucker!
+# .96, motherf****r!
+
+table(pred,test.classe)
+
+suppressWarnings(modFit <- train(train.pca, train.classe, method="rf", trControl=tc, ntree=250))
+pred <- predict(modFit, test.pca)
+mean(pred == test.classe)
+
+
+
 
 pred.quiz <- predict(modFit, test.quiz.pca)
 pred.quiz

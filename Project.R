@@ -86,23 +86,21 @@ featurePlot(train.pca, train.classe)
 # Fit Models and Predict
 ##########
 
+# Decision Tree
 tc <- trainControl(method="cv", number=5)
 modFit <- train(train.pca, train.classe, method="rpart", trControl=tc)
-print(modFit)
 pred <- predict(modFit, test.pca)
 mean(pred == test.classe)
-# .38
 
+# Linear Discriminant Analysis
 modFit <- train(train.pca, train.classe, method="lda", trControl=tc)
-print(modFit)
 pred <- predict(modFit, test.pca)
 mean(pred == test.classe)
-# .52
 
+# Tree-Bagging
 modFit <- train(train.pca, train.classe, method="treebag", trControl=tc)
 pred <- predict(modFit, test.pca)
 mean(pred == test.classe)
-# .96, motherf****r!
 
 table(pred,test.classe)
 
